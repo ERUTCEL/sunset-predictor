@@ -2,6 +2,7 @@ const https = require('https');
 
 const BASE = 'api.openweathermap.org';
 const API_KEY = process.env.OWM_API_KEY;
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://sunset-prediction-kor.netlify.app';
 
 const ALLOWED_ENDPOINTS = ['weather', 'air_pollution', 'forecast'];
 
@@ -16,7 +17,14 @@ function httpsGet(url) {
 }
 
 exports.handler = async (event) => {
-  const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+  const origin = event.headers['origin'] || event.headers['referer'] || '';
+  const isAllowed = origin.startsWith(ALLOWED_ORIGIN);
+  const corsOrigin = isAllowed ? ALLOWED_ORIGIN : 'null';
+  const headers = { 'Access-Control-Allow-Origin': corsOrigin, 'Content-Type': 'application/json' };
+
+  if (!isAllowed) {
+    return { statusCode: 403, headers, body: JSON.stringify({ message: '허용되지 않은 요청입니다.' }) };
+  }
 
   if (!API_KEY) {
     return { statusCode: 500, headers, body: JSON.stringify({ message: '서버에 API 키가 설정되지 않았습니다.' }) };
