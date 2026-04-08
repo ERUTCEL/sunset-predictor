@@ -1,0 +1,447 @@
+/* ===== 기본 리셋 & 변수 ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --sunset-deep:   #1a0a00;
+  --sunset-dark:   #2d1200;
+  --sunset-red:    #c0392b;
+  --sunset-orange: #e67e22;
+  --sunset-gold:   #f39c12;
+  --sunset-yellow: #f1c40f;
+  --sky-blue:      #1a2a4a;
+  --sky-mid:       #2c3e6a;
+  --card-bg:       rgba(255,255,255,0.06);
+  --card-border:   rgba(255,180,80,0.18);
+  --text-main:     #ffe8cc;
+  --text-muted:    #c9a87a;
+  --text-dim:      #8a6040;
+  --radius:        16px;
+  --shadow:        0 8px 32px rgba(0,0,0,0.5);
+}
+
+body {
+  font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  background: linear-gradient(165deg, #0a0515 0%, #1a0a2e 25%, #2d1200 60%, #1a0a00 100%);
+  min-height: 100vh;
+  color: var(--text-main);
+  overflow-x: hidden;
+}
+
+/* ===== 배경 별 효과 ===== */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 20% 15%, rgba(255,220,150,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 8%,  rgba(255,200,120,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 5%,  rgba(255,240,180,0.5) 0%, transparent 100%),
+    radial-gradient(2px 2px at 85% 20%, rgba(255,180,80,0.3)  0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 30%, rgba(255,200,150,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 12%, rgba(255,220,160,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 3%,  rgba(255,210,140,0.3) 0%, transparent 100%),
+    radial-gradient(2px 2px at 55% 22%, rgba(255,180,100,0.2) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 노을 빛 번짐 */
+body::after {
+  content: '';
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 40vh;
+  background: linear-gradient(to top,
+    rgba(180, 60, 0, 0.25) 0%,
+    rgba(220, 100, 0, 0.15) 30%,
+    transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== 레이아웃 ===== */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+/* ===== 헤더 ===== */
+header {
+  text-align: center;
+  padding: 48px 0 32px;
+}
+
+.header-icon {
+  font-size: 56px;
+  display: block;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 20px rgba(255,120,0,0.8));
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { filter: drop-shadow(0 0 20px rgba(255,120,0,0.8)); }
+  50%       { filter: drop-shadow(0 0 36px rgba(255,60,0,1)); }
+}
+
+header h1 {
+  font-size: clamp(22px, 5vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(90deg, var(--sunset-gold), var(--sunset-orange), var(--sunset-red));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+header p {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ===== 검색 패널 ===== */
+.search-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 24px;
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
+}
+
+.search-panel h2 {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+
+.search-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search-row select,
+.search-row input {
+  flex: 1;
+  min-width: 160px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,180,80,0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: var(--text-main);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-row select:focus,
+.search-row input:focus {
+  border-color: var(--sunset-orange);
+}
+
+.search-row select option { background: #1a0a00; }
+
+.search-row input::placeholder { color: var(--text-dim); }
+
+.btn-search {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, var(--sunset-red), var(--sunset-orange));
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(220,80,0,0.4);
+}
+.btn-search:hover  { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(220,80,0,0.6); }
+.btn-search:active { transform: translateY(0); }
+.btn-search:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.api-notice {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.api-notice a { color: var(--sunset-gold); }
+
+/* ===== 에러 메시지 ===== */
+#error-msg {
+  display: none;
+  background: rgba(200,40,40,0.2);
+  border: 1px solid rgba(200,40,40,0.5);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #ffaaaa;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* ===== 로딩 ===== */
+#loading {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 32px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.spinner {
+  width: 24px; height: 24px;
+  border: 3px solid rgba(255,180,80,0.2);
+  border-top-color: var(--sunset-orange);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== 현재 조건 섹션 ===== */
+#current-section { display: none; }
+#forecast-section { display: none; }
+
+.section-title {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+
+/* ===== 날씨 위치 정보 ===== */
+#weather-desc {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+/* ===== 점수 링 + 일몰 ===== */
+.score-sunset-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 500px) {
+  .score-sunset-row { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
+}
+
+/* 점수 링 카드 */
+.score-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.score-ring-wrap {
+  position: relative;
+  width: 130px; height: 130px;
+}
+
+.score-ring-wrap svg {
+  transform: rotate(-90deg);
+}
+
+.score-ring-bg { stroke: rgba(255,180,80,0.12); fill: none; stroke-width: 8; }
+.score-ring-fg { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s ease, stroke 0.5s; }
+
+.score-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#score-number {
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 1;
+  transition: color 0.5s;
+}
+
+.score-unit { font-size: 14px; color: var(--text-muted); }
+
+#score-grade {
+  font-size: 18px;
+  font-weight: 700;
+  transition: color 0.5s;
+}
+
+#score-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* 일몰 카드 */
+.sunset-time-card { display: flex; flex-direction: column; gap: 16px; justify-content: center; }
+
+.time-block { display: flex; flex-direction: column; gap: 4px; }
+.time-block .time-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+.time-block .time-value { font-size: 28px; font-weight: 800; color: var(--sunset-gold); letter-spacing: 1px; }
+.time-block .time-sub   { font-size: 12px; color: var(--text-muted); }
+
+/* ===== 날씨 통계 그리드 ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 500px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+  backdrop-filter: blur(8px);
+}
+
+.stat-icon  { font-size: 20px; margin-bottom: 4px; }
+.stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 15px; font-weight: 700; color: var(--text-main); margin-top: 2px; }
+
+/* ===== 점수 세부 분석 ===== */
+.breakdown-card { margin-bottom: 16px; }
+
+.breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.breakdown-row:last-child { margin-bottom: 0; }
+
+.breakdown-label { font-size: 12px; color: var(--text-muted); min-width: 80px; }
+
+.bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease, background 0.5s;
+  width: 0;
+}
+
+.breakdown-max { font-size: 10px; color: var(--text-dim); min-width: 30px; text-align: right; }
+
+/* ===== 촬영 팁 ===== */
+.tips-card { margin-bottom: 24px; }
+.tips-card ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.tips-card li {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 10px 14px;
+  background: rgba(255,180,80,0.06);
+  border-left: 3px solid var(--sunset-orange);
+  border-radius: 0 8px 8px 0;
+  line-height: 1.5;
+}
+
+/* ===== 예보 카드 ===== */
+.forecast-cards {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 700px) { .forecast-cards { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 460px) { .forecast-cards { grid-template-columns: repeat(2, 1fr); } }
+
+.forecast-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 14px 10px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: default;
+}
+.forecast-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4), 0 0 20px rgba(255,120,0,0.1);
+}
+
+.forecast-card.today {
+  border-color: var(--sunset-orange);
+  box-shadow: 0 0 0 1px rgba(230,126,34,0.3), var(--shadow);
+}
+
+.forecast-date  { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
+.forecast-emoji { font-size: 28px; margin-bottom: 4px; }
+.forecast-score { font-size: 22px; font-weight: 900; line-height: 1; }
+.forecast-score span { font-size: 11px; }
+.forecast-grade { font-size: 11px; font-weight: 600; margin-bottom: 6px; }
+.forecast-sunset { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+.forecast-desc  { font-size: 10px; color: var(--text-dim); margin-bottom: 8px; }
+
+.forecast-bars { display: flex; flex-direction: column; gap: 4px; }
+.mini-bar-row { display: flex; align-items: center; gap: 4px; }
+.mini-bar-row span { font-size: 9px; color: var(--text-dim); min-width: 22px; }
+.mini-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+.mini-bar div { height: 100%; border-radius: 2px; transition: width 0.8s ease; }
+
+/* ===== 알고리즘 안내 ===== */
+.algo-info {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(8px);
+}
+.algo-info h3 { font-size: 13px; color: var(--sunset-gold); margin-bottom: 12px; }
+.algo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 500px) { .algo-grid { grid-template-columns: 1fr; } }
+.algo-item { font-size: 12px; color: var(--text-muted); line-height: 1.5; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 8px; }
+.algo-item strong { color: var(--text-main); display: block; margin-bottom: 2px; }
+
+/* ===== 푸터 ===== */
+footer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  padding-top: 32px;
+  border-top: 1px solid rgba(255,180,80,0.1);
+  line-height: 1.8;
+}

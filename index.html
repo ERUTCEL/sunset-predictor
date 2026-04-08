@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>노을 예보 — 대한민국 붉은 노을 예측</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+
+    <!-- 헤더 -->
+    <header>
+      <span class="header-icon">🌅</span>
+      <h1>대한민국 노을 예보</h1>
+      <p>기후 조건(미세먼지 · 구름 · 습도 · 바람)을 분석하여<br>
+         오늘 가장 아름다운 붉은 노을을 만날 수 있는지 예측합니다.</p>
+    </header>
+
+    <!-- 검색 패널 -->
+    <div class="search-panel">
+      <h2>도시 선택</h2>
+      <div class="search-row">
+        <select id="city-select" aria-label="도시 선택"></select>
+        <button id="search-btn" class="btn-search">노을 예측하기</button>
+      </div>
+    </div>
+
+    <!-- 에러 -->
+    <div id="error-msg" role="alert"></div>
+
+    <!-- 로딩 -->
+    <div id="loading" aria-live="polite">
+      <div class="spinner"></div>
+      <span>날씨 데이터와 대기질을 불러오는 중…</span>
+    </div>
+
+    <!-- 현재 조건 -->
+    <section id="current-section" aria-label="오늘의 노을 예측">
+      <p class="section-title">오늘의 노을 예측</p>
+      <div id="weather-desc"></div>
+
+      <!-- 점수 링 + 일몰 시각 -->
+      <div class="score-sunset-row">
+
+        <!-- 점수 링 -->
+        <div class="card score-card">
+          <div class="score-ring-wrap">
+            <svg width="130" height="130" viewBox="0 0 130 130" aria-hidden="true">
+              <circle class="score-ring-bg" cx="65" cy="65" r="54"/>
+              <circle id="score-ring" class="score-ring-fg" cx="65" cy="65" r="54"/>
+            </svg>
+            <div class="score-center">
+              <span id="score-number">--</span>
+              <span class="score-unit">%</span>
+            </div>
+          </div>
+          <div id="score-grade">--</div>
+          <div id="score-label">예측 결과를 불러오는 중</div>
+        </div>
+
+        <!-- 일몰 시각 -->
+        <div class="card sunset-time-card">
+          <div class="time-block">
+            <span class="time-label">오늘 일몰</span>
+            <span class="time-value" id="sunset-time">--:--</span>
+            <span class="time-sub">KST (한국 표준시)</span>
+          </div>
+          <div class="time-block">
+            <span class="time-label">골든아워</span>
+            <span class="time-value" style="font-size:18px" id="golden-hour">--:-- ~ --:--</span>
+            <span class="time-sub">일몰 전 1시간 · 최적 촬영 타임</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 날씨 상세 통계 -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🌫️</div>
+          <div class="stat-label">PM2.5</div>
+          <div class="stat-value" id="stat-pm25">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💨</div>
+          <div class="stat-label">PM10</div>
+          <div class="stat-value" id="stat-pm10">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">☁️</div>
+          <div class="stat-label">구름량</div>
+          <div class="stat-value" id="stat-clouds">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💧</div>
+          <div class="stat-label">습도</div>
+          <div class="stat-value" id="stat-humidity">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🌬️</div>
+          <div class="stat-label">풍속</div>
+          <div class="stat-value" id="stat-wind">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🌡️</div>
+          <div class="stat-label">기온</div>
+          <div class="stat-value" id="stat-temp">--</div>
+        </div>
+      </div>
+
+      <!-- 점수 세부 분석 -->
+      <div class="card breakdown-card">
+        <p class="section-title">항목별 분석</p>
+
+        <div class="breakdown-row">
+          <span class="breakdown-label">🌫️ 미세먼지</span>
+          <div class="bar-track"><div id="bar-aerosol" class="bar-fill"></div></div>
+          <span class="breakdown-max" id="pct-aerosol">0%</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">☁️ 구름량</span>
+          <div class="bar-track"><div id="bar-clouds" class="bar-fill"></div></div>
+          <span class="breakdown-max" id="pct-clouds">0%</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">💧 습도</span>
+          <div class="bar-track"><div id="bar-humidity" class="bar-fill"></div></div>
+          <span class="breakdown-max" id="pct-humidity">0%</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">🌬️ 풍속</span>
+          <div class="bar-track"><div id="bar-wind" class="bar-fill"></div></div>
+          <span class="breakdown-max" id="pct-wind">0%</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">📅 계절</span>
+          <div class="bar-track"><div id="bar-season" class="bar-fill"></div></div>
+          <span class="breakdown-max" id="pct-season">0%</span>
+        </div>
+      </div>
+
+      <!-- 촬영 팁 -->
+      <div class="card tips-card">
+        <p class="section-title">📸 오늘의 촬영 팁</p>
+        <ul id="photo-tips"></ul>
+      </div>
+    </section>
+
+    <!-- 5일 예보 -->
+    <section id="forecast-section" aria-label="5일 노을 예보">
+      <p class="section-title">5일 노을 예보</p>
+      <div id="forecast-cards" class="forecast-cards"></div>
+    </section>
+
+    <!-- 알고리즘 안내 -->
+    <div class="algo-info">
+      <h3>🔬 예측 알고리즘 — 한국 기후 특성 반영</h3>
+      <div class="algo-grid">
+        <div class="algo-item">
+          <strong>미세먼지 (PM2.5) · 30%</strong>
+          대기 중 미세입자가 태양광을 산란시켜 붉은색을 만들어냅니다.
+          10~35 μg/m³이 최적, 너무 많으면 탁해집니다.
+        </div>
+        <div class="algo-item">
+          <strong>구름량 · 30%</strong>
+          20~45%의 산재한 구름이 가장 이상적입니다.
+          구름이 빛을 받아 붉게 물드는 순간이 핵심입니다.
+        </div>
+        <div class="algo-item">
+          <strong>습도 · 20%</strong>
+          30~55%의 적당한 습도가 최적입니다.
+          습도가 높으면 안개처럼 흐릿해집니다.
+        </div>
+        <div class="algo-item">
+          <strong>풍속 · 10%</strong>
+          1~5 m/s의 약한 바람이 오염물질을 적당히 분산시킵니다.
+        </div>
+        <div class="algo-item">
+          <strong>계절 보정 · 10%</strong>
+          가을(9~10월)이 최고입니다. 봄은 황사,
+          여름은 장마로 점수가 낮아집니다.
+        </div>
+        <div class="algo-item">
+          <strong>골든아워 계산</strong>
+          위도/경도 기반 천문 계산으로 일몰 시각과
+          골든아워(일몰 전 1시간)를 정확히 산출합니다.
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      날씨 데이터: OpenWeatherMap API &nbsp;·&nbsp;
+      대기질 데이터: OpenWeatherMap Air Pollution API<br>
+      일몰 시각은 천문 공식으로 계산됩니다 (±수 분 오차 가능)<br>
+      예측은 기후 조건의 통계적 분석이며, 실제 노을과 다를 수 있습니다.
+    </footer>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
