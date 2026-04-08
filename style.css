@@ -59,6 +59,39 @@ body::after {
   z-index: 0;
 }
 
+/* ===== 언어 스위처 ===== */
+.lang-switcher {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 16px 0 0;
+}
+
+.lang-btn {
+  padding: 5px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,180,80,0.2);
+  border-radius: 20px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lang-btn:hover {
+  border-color: var(--sunset-orange);
+  color: var(--text-main);
+}
+
+.lang-btn.active {
+  background: linear-gradient(135deg, var(--sunset-red), var(--sunset-orange));
+  border-color: transparent;
+  color: #fff;
+}
+
 /* ===== 레이아웃 ===== */
 .container {
   position: relative;

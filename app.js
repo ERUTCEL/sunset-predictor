@@ -117,11 +117,12 @@ function calculateSunsetScore(weather) {
  * 점수에 따른 등급 및 색상
  */
 function getGrade(score) {
-  if (score >= 85) return { grade: "최고", label: "환상적인 노을", color: "#FF4500", emoji: "🌅" };
-  if (score >= 70) return { grade: "좋음", label: "아름다운 노을", color: "#FF7F00", emoji: "🧡" };
-  if (score >= 55) return { grade: "보통", label: "나쁘지 않은 노을", color: "#FFA500", emoji: "🌤️" };
-  if (score >= 40) return { grade: "낮음", label: "흐릿한 노을", color: "#FFD700", emoji: "🌥️" };
-  return { grade: "나쁨", label: "노을 기대 어려움", color: "#A9A9A9", emoji: "☁️" };
+  const grades = t('grades');
+  if (score >= 85) return { ...grades[0], color: "#FF4500", emoji: "🌅" };
+  if (score >= 70) return { ...grades[1], color: "#FF7F00", emoji: "🧡" };
+  if (score >= 55) return { ...grades[2], color: "#FFA500", emoji: "🌤️" };
+  if (score >= 40) return { ...grades[3], color: "#FFD700", emoji: "🌥️" };
+  return { ...grades[4], color: "#A9A9A9", emoji: "☁️" };
 }
 
 // ===== 일몰 시각 계산 =====
@@ -157,29 +158,18 @@ function calcGoldenHour(lat, lon, date) {
 function getPhotoTips(weather, score) {
   const tips = [];
   const { pm25, clouds, humidity } = weather;
+  const T = t('tips');
 
-  if (score.total >= 70) {
-    tips.push("📷 삼각대를 준비하세요. 골든아워 시작 30분 전부터 촬영 포지션을 잡으세요.");
-  }
-  if (clouds >= 20 && clouds <= 60) {
-    tips.push("☁️ 구름 분포가 이상적입니다. 구름이 빛을 받아 붉게 물드는 순간을 노리세요.");
-  }
-  if (pm25 >= 10 && pm25 <= 35) {
-    tips.push("✨ 대기 중 미세입자가 적당합니다. 태양 주변의 코로나 효과를 담아보세요.");
-  }
-  if (pm25 > 55) {
-    tips.push("😷 미세먼지가 많아 노출을 -1~-2EV 조정하면 탁한 느낌을 줄일 수 있습니다.");
-  }
-  if (humidity > 70) {
-    tips.push("💧 습도가 높아 수평선 근처에 안개층이 형성될 수 있습니다. 고각도 구도를 시도하세요.");
-  }
+  if (score.total >= 70)          tips.push(T.tripod);
+  if (clouds >= 20 && clouds <= 60) tips.push(T.clouds);
+  if (pm25 >= 10 && pm25 <= 35)   tips.push(T.aerosol);
+  if (pm25 > 55)                  tips.push(T.haze);
+  if (humidity > 70)              tips.push(T.humidity);
   if (score.total >= 55) {
-    tips.push("🎨 노출을 -0.7EV로 설정하면 붉은 톤이 더 풍부하게 나옵니다.");
-    tips.push("📱 화이트밸런스를 '맑음(5500K)'으로 고정하면 따뜻한 색조를 유지할 수 있습니다.");
+    tips.push(T.exposure);
+    tips.push(T.wb);
   }
-  if (tips.length === 0) {
-    tips.push("⛅ 오늘은 노을 조건이 좋지 않습니다. 구름 틈새 빛기둥(Jacob's Ladder)을 노려보세요.");
-  }
+  if (tips.length === 0)          tips.push(T.poor);
   return tips;
 }
 
@@ -299,8 +289,8 @@ function renderCurrentConditions(weather, aq, lat, lon) {
   document.getElementById('golden-hour').textContent = goldenHour || '--:-- ~ --:--';
 
   // 날씨 상세
-  document.getElementById('stat-pm25').textContent = pm25 !== null ? `${pm25.toFixed(1)} μg/m³` : '데이터 없음';
-  document.getElementById('stat-pm10').textContent = pm10 !== null ? `${pm10.toFixed(1)} μg/m³` : '데이터 없음';
+  document.getElementById('stat-pm25').textContent = pm25 !== null ? `${pm25.toFixed(1)} μg/m³` : t('noData');
+  document.getElementById('stat-pm10').textContent = pm10 !== null ? `${pm10.toFixed(1)} μg/m³` : t('noData');
   document.getElementById('stat-clouds').textContent = `${clouds}%`;
   document.getElementById('stat-humidity').textContent = `${humidity}%`;
   document.getElementById('stat-wind').textContent = `${windSpeed.toFixed(1)} m/s`;
@@ -351,7 +341,7 @@ function renderForecast(forecastItems, lat, lon, currentPm25) {
     card.className = `forecast-card ${isToday ? 'today' : ''}`;
     card.style.setProperty('--grade-color', grade.color);
     card.innerHTML = `
-      <div class="forecast-date">${isToday ? '오늘' : item.dateStr}</div>
+      <div class="forecast-date">${isToday ? t('today') : item.dateStr}</div>
       <div class="forecast-emoji">${grade.emoji}</div>
       <div class="forecast-score" style="color:${grade.color}">${scoreResult.total}<span>%</span></div>
       <div class="forecast-grade" style="color:${grade.color}">${grade.grade}</div>
@@ -416,6 +406,7 @@ function clearError() {
 
 // ===== 이벤트 바인딩 =====
 document.addEventListener('DOMContentLoaded', () => {
+  applyLang();
   renderCitySelector();
 
   document.getElementById('city-select').addEventListener('change', e => {

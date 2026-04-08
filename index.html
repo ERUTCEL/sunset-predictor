@@ -5,9 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>노을 예보 — 대한민국 붉은 노을 예측</title>
   <link rel="stylesheet" href="style.css">
+  <script src="i18n.js"></script>
 </head>
 <body>
   <div class="container">
+
+    <!-- 언어 스위처 -->
+    <div class="lang-switcher">
+      <button class="lang-btn active" data-lang="ko" onclick="setLang('ko')">한국어</button>
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">English</button>
+      <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">中文</button>
+    </div>
 
     <!-- 헤더 -->
     <header>
