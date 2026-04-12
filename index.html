@@ -123,27 +123,37 @@
         <div class="breakdown-row">
           <span class="breakdown-label">🌫️ 미세먼지</span>
           <div class="bar-track"><div id="bar-aerosol" class="bar-fill"></div></div>
-          <span class="breakdown-max" id="pct-aerosol">0%</span>
+          <span class="breakdown-max" id="pct-aerosol">0/30</span>
         </div>
         <div class="breakdown-row">
-          <span class="breakdown-label">☁️ 구름량</span>
-          <div class="bar-track"><div id="bar-clouds" class="bar-fill"></div></div>
-          <span class="breakdown-max" id="pct-clouds">0%</span>
+          <span class="breakdown-label">🌤️ 상층구름 <small>(권운·8km+)</small></span>
+          <div class="bar-track"><div id="bar-cloud-high" class="bar-fill"></div></div>
+          <span class="breakdown-max" id="pct-cloud-high">0/15</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">⛅ 중층구름 <small>(3~8km)</small></span>
+          <div class="bar-track"><div id="bar-cloud-mid" class="bar-fill"></div></div>
+          <span class="breakdown-max" id="pct-cloud-mid">0/10</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">☁️ 하층구름 <small>(3km-)</small></span>
+          <div class="bar-track"><div id="bar-cloud-low" class="bar-fill"></div></div>
+          <span class="breakdown-max" id="pct-cloud-low">0/5</span>
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">💧 습도</span>
           <div class="bar-track"><div id="bar-humidity" class="bar-fill"></div></div>
-          <span class="breakdown-max" id="pct-humidity">0%</span>
+          <span class="breakdown-max" id="pct-humidity">0/20</span>
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">🌬️ 풍속</span>
           <div class="bar-track"><div id="bar-wind" class="bar-fill"></div></div>
-          <span class="breakdown-max" id="pct-wind">0%</span>
+          <span class="breakdown-max" id="pct-wind">0/10</span>
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">📅 계절</span>
           <div class="bar-track"><div id="bar-season" class="bar-fill"></div></div>
-          <span class="breakdown-max" id="pct-season">0%</span>
+          <span class="breakdown-max" id="pct-season">0/10</span>
         </div>
       </div>
 
@@ -170,9 +180,19 @@
           10~35 μg/m³이 최적, 너무 많으면 탁해집니다.
         </div>
         <div class="algo-item">
-          <strong>구름량 · 30%</strong>
-          20~45%의 산재한 구름이 가장 이상적입니다.
-          구름이 빛을 받아 붉게 물드는 순간이 핵심입니다.
+          <strong>상층 구름 (권운) · 15%</strong>
+          8km 이상의 권운은 노을 빛을 받아 불타듯 붉게 물드는 핵심 요소입니다.
+          30~70%가 가장 화려한 노을을 만들어냅니다.
+        </div>
+        <div class="algo-item">
+          <strong>중층 구름 · 10%</strong>
+          3~8km 고도의 고적운·고층운은 오렌지·자주 색조를 담당합니다.
+          10~40%가 최적입니다.
+        </div>
+        <div class="algo-item">
+          <strong>하층 구름 · 5%</strong>
+          3km 이하의 층운·적운은 많으면 서쪽 지평선을 차단해 노을을 가립니다.
+          15% 이하가 이상적입니다.
         </div>
         <div class="algo-item">
           <strong>습도 · 20%</strong>
@@ -185,8 +205,8 @@
         </div>
         <div class="algo-item">
           <strong>계절 보정 · 10%</strong>
-          가을(9~10월)이 최고입니다. 봄은 황사,
-          여름은 장마로 점수가 낮아집니다.
+          가을(9~10월)이 최고입니다. 봄·겨울도 준수하며,
+          여름 장마철에 점수가 낮아집니다.
         </div>
         <div class="algo-item">
           <strong>골든아워 계산</strong>
@@ -197,8 +217,8 @@
     </div>
 
     <footer>
-      날씨 데이터: OpenWeatherMap API &nbsp;·&nbsp;
-      대기질 데이터: OpenWeatherMap Air Pollution API<br>
+      날씨·구름층 데이터: Open-Meteo (ECMWF/GFS 기반, 무료 오픈소스) &nbsp;·&nbsp;
+      대기질 데이터: Open-Meteo Air Quality API<br>
       일몰 시각은 천문 공식으로 계산됩니다 (±수 분 오차 가능)<br>
       예측은 기후 조건의 통계적 분석이며, 실제 노을과 다를 수 있습니다.
     </footer>

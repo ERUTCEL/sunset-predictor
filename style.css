@@ -451,6 +451,7 @@ header p {
 .forecast-bars { display: flex; flex-direction: column; gap: 4px; }
 .mini-bar-row { display: flex; align-items: center; gap: 4px; }
 .mini-bar-row span { font-size: 9px; color: var(--text-dim); min-width: 22px; }
+.mini-pct { min-width: 28px; text-align: right; }
 .mini-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
 .mini-bar div { height: 100%; border-radius: 2px; transition: width 0.8s ease; }
 
