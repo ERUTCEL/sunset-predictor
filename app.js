@@ -180,8 +180,9 @@ function calcSunsetTime(lat, lon, date) {
   const hourAngle = Math.acos(cosHourAngle) * (180 / Math.PI);
   const solarNoon = 12 - (lon - 135) / 15 - EoT / 60;
   const sunset = solarNoon + hourAngle / 15;
-  const h = Math.floor(sunset);
-  const m = Math.round((sunset - h) * 60);
+  let h = Math.floor(sunset);
+  let m = Math.round((sunset - h) * 60);
+  if (m === 60) { h += 1; m = 0; }
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 }
 
