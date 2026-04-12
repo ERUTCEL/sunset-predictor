@@ -51,39 +51,39 @@ function getWeatherEmoji(code) {
 // - 하층(층운, 3km-): 지평선 차단 주범
 
 /**
- * PM2.5 기반 에어로졸 점수 (0~30)
+ * PM2.5 기반 에어로졸 점수 (0~20)
  */
 function scoreAerosol(pm25) {
-  if (pm25 === null || pm25 === undefined) return 15;
-  if (pm25 < 5)  return 12;  // 깨끗해도 레일리 산란으로 기본 노을 있음
-  if (pm25 < 15) return 28;  // 최적
-  if (pm25 < 35) return 25;  // 양호
-  if (pm25 < 55) return 15;  // 보통 (약간 탁함)
-  if (pm25 < 75) return 8;   // 나쁨
-  return 3;                   // 매우 나쁨
+  if (pm25 === null || pm25 === undefined) return 10;
+  if (pm25 < 5)  return 8;   // 깨끗해도 레일리 산란으로 기본 노을 있음
+  if (pm25 < 15) return 18;  // 최적
+  if (pm25 < 35) return 16;  // 양호
+  if (pm25 < 55) return 10;  // 보통 (약간 탁함)
+  if (pm25 < 75) return 5;   // 나쁨
+  return 2;                   // 매우 나쁨
 }
 
 /**
- * 상층 구름 점수 (0~15)
+ * 상층 구름 점수 (0~22)
  * 권운·고권운: 노을 빛을 받아 붉게 불타는 구름의 주역
  */
 function scoreCloudHigh(pct) {
-  if (pct < 10)  return 8;   // 거의 없음: 레일리 산란만
-  if (pct < 30)  return 12;  // 약간 있음
-  if (pct < 70)  return 15;  // 최적: 화려한 노을
-  if (pct < 90)  return 10;  // 많음: 여전히 괜찮음
-  return 6;                   // 완전 덮임
+  if (pct < 10)  return 11;  // 거의 없음: 레일리 산란만
+  if (pct < 30)  return 17;  // 약간 있음
+  if (pct < 70)  return 22;  // 최적: 화려한 노을
+  if (pct < 90)  return 15;  // 많음: 여전히 괜찮음
+  return 8;                   // 완전 덮임
 }
 
 /**
- * 중층 구름 점수 (0~10)
+ * 중층 구름 점수 (0~13)
  * 고적운·고층운: 오렌지·자주 색조 담당
  */
 function scoreCloudMid(pct) {
-  if (pct < 10)  return 7;   // 거의 없음
-  if (pct < 40)  return 10;  // 최적
-  if (pct < 70)  return 6;   // 많아짐
-  return 2;                   // 하늘 가림
+  if (pct < 10)  return 9;   // 거의 없음
+  if (pct < 40)  return 13;  // 최적
+  if (pct < 70)  return 8;   // 많아짐
+  return 3;                   // 하늘 가림
 }
 
 /**
@@ -98,24 +98,24 @@ function scoreCloudLow(pct) {
 }
 
 /**
- * 습도 점수 (0~20)
+ * 습도 점수 (0~18)
  */
 function scoreHumidity(humidity) {
-  if (humidity < 30) return 12;
-  if (humidity < 55) return 20;
-  if (humidity < 70) return 16;
-  if (humidity < 85) return 8;
-  return 4;
+  if (humidity < 30) return 10;
+  if (humidity < 55) return 18;
+  if (humidity < 70) return 14;
+  if (humidity < 85) return 7;
+  return 3;
 }
 
 /**
- * 풍속 점수 (0~10)
+ * 풍속 점수 (0~12)
  */
 function scoreWind(windSpeed) {
-  if (windSpeed < 1)  return 5;
-  if (windSpeed < 5)  return 10;
-  if (windSpeed < 10) return 8;
-  if (windSpeed < 15) return 5;
+  if (windSpeed < 1)  return 6;
+  if (windSpeed < 5)  return 12;
+  if (windSpeed < 10) return 9;
+  if (windSpeed < 15) return 6;
   return 3;
 }
 
@@ -135,7 +135,7 @@ function scoreSeason(month) {
 
 /**
  * 종합 노을 품질 점수 계산 (0~100)
- * 최대 합계: 30 + 15 + 10 + 5 + 20 + 10 + 10 = 100
+ * 최대 합계: 20 + 22 + 13 + 5 + 18 + 12 + 10 = 100
  */
 function calculateSunsetScore(weather) {
   const { pm25, cloudHigh, cloudMid, cloudLow, humidity, windSpeed, month } = weather;
@@ -349,12 +349,12 @@ function renderCurrentConditions(weather, aq, lat, lon) {
 
   // 점수 세부 분석
   const bd = scoreResult.breakdown;
-  renderBreakdownBar('bar-aerosol',    bd.s_aerosol,  30, grade.color);
-  renderBreakdownBar('bar-cloud-high', bd.s_high,     15, grade.color);
-  renderBreakdownBar('bar-cloud-mid',  bd.s_mid,      10, grade.color);
+  renderBreakdownBar('bar-aerosol',    bd.s_aerosol,  20, grade.color);
+  renderBreakdownBar('bar-cloud-high', bd.s_high,     22, grade.color);
+  renderBreakdownBar('bar-cloud-mid',  bd.s_mid,      13, grade.color);
   renderBreakdownBar('bar-cloud-low',  bd.s_low,       5, grade.color);
-  renderBreakdownBar('bar-humidity',   bd.s_humidity,  20, grade.color);
-  renderBreakdownBar('bar-wind',       bd.s_wind,      10, grade.color);
+  renderBreakdownBar('bar-humidity',   bd.s_humidity,  18, grade.color);
+  renderBreakdownBar('bar-wind',       bd.s_wind,      12, grade.color);
   renderBreakdownBar('bar-season',     bd.s_season,    10, grade.color);
 
   // 구름 레이어 상세 (breakdown 섹션 서브텍스트)
