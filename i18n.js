@@ -1,9 +1,10 @@
 const TRANSLATIONS = {
   ko: {
     // 구름 레이어 라벨
-    labelCloudHigh: '🌤️ 상층구름 (권운)',
-    labelCloudMid:  '⛅ 중층구름',
-    labelCloudLow:  '☁️ 하층구름',
+    labelCloudHigh:  '🌤️ 상층구름 (권운)',
+    labelCloudMid:   '⛅ 중층구름',
+    labelCloudLow:   '☁️ 하층구름',
+    labelVisibility: '👁️ 가시거리',
     title:         '노을 예보 — 대한민국 붉은 노을 예측',
     h1:            '대한민국 노을 예보',
     subtitle:      '기후 조건(미세먼지 · 구름 · 습도 · 바람)을 분석하여<br>오늘 가장 아름다운 붉은 노을을 만날 수 있는지 예측합니다.',
@@ -30,13 +31,14 @@ const TRANSLATIONS = {
     forecastTitle: '5일 노을 예보',
     algoTitle:     '🔬 예측 알고리즘 — 한국 기후 특성 반영',
     algoItems: [
-      { title: '미세먼지 (PM2.5) · 20%', body: '대기 중 미세입자가 태양광을 산란시켜 붉은색을 만들어냅니다. 10~35 μg/m³이 최적, 너무 많으면 탁해집니다.' },
-      { title: '상층구름 (권운) · 22%',  body: '8km 이상의 권운은 노을 빛을 받아 불타듯 붉게 물드는 핵심 요소입니다. 30~70%가 가장 화려한 노을을 만들어냅니다.' },
-      { title: '중층구름 · 13%',         body: '3~8km 고도의 고적운·고층운은 오렌지·자주 색조를 담당합니다. 10~40%가 최적입니다.' },
-      { title: '하층구름 · 5%',          body: '3km 이하의 층운·적운은 많으면 서쪽 지평선을 차단해 노을을 가립니다. 15% 이하가 이상적입니다.' },
-      { title: '습도 · 18%',             body: '30~55%의 적당한 습도가 최적입니다. 습도가 높으면 안개처럼 흐릿해집니다.' },
-      { title: '풍속 · 12%',             body: '1~5 m/s의 약한 바람이 오염물질을 적당히 분산시킵니다.' },
-      { title: '계절 보정 · 10%',        body: '가을(9~10월)이 최고입니다. 봄·겨울도 준수하며, 여름 장마철에 점수가 낮아집니다.' },
+      { title: '에어로졸 (AOD+PM2.5) · 20%', body: 'AOD(에어로졸 광학 깊이)와 PM2.5를 6:4로 혼합합니다. AOD는 대기 전체 컬럼의 빛 소산량으로 노을 붉기와 직접 연관됩니다.' },
+      { title: '상층구름 (권운) · 20%',       body: '8km 이상 권운이 노을 빛을 받아 불타는 핵심 요소입니다. 30~70%가 최적. 기압이 높을수록 보정 점수가 올라갑니다.' },
+      { title: '중층구름 · 12%',              body: '3~8km 고도 고적운·고층운이 오렌지·자주 색조를 담당합니다. CAPE(대류 에너지)가 높으면 구름 발달 예상으로 보정됩니다.' },
+      { title: '하층구름 · 5%',               body: '3km 이하 층운·적운은 많으면 서쪽 지평선을 차단합니다. 15% 이하가 이상적입니다.' },
+      { title: '가시거리 · 8%',               body: '대기 탁도의 지상 실측값입니다. 5,000~15,000m 범위에서 에어로졸 산란이 풍부해 노을 색이 진해집니다.' },
+      { title: '습도 (이슬점) · 16%',         body: '단순 상대습도 대신 이슬점 온도로 대기 컬럼 수분량을 추정합니다. 이슬점 5~15°C가 최적입니다.' },
+      { title: '풍속 · 12%',                  body: '1~5 m/s의 약한 바람이 오염물질을 적당히 분산시킵니다.' },
+      { title: '계절 보정 · 7%',              body: '가을(9~10월)이 최고입니다. 봄·겨울도 준수하며, 여름 장마철에 점수가 낮아집니다.' },
     ],
     footer: '날씨·구름층 데이터: Open-Meteo (ECMWF/GFS 기반, 무료 오픈소스) &nbsp;·&nbsp; 대기질 데이터: Open-Meteo Air Quality API<br>일몰 시각은 천문 공식으로 계산됩니다 (±수 분 오차 가능)<br>예측은 기후 조건의 통계적 분석이며, 실제 노을과 다를 수 있습니다.',
     noData:  '데이터 없음',
@@ -63,9 +65,10 @@ const TRANSLATIONS = {
 
   en: {
     // cloud layer labels
-    labelCloudHigh: '🌤️ High Clouds (Cirrus)',
-    labelCloudMid:  '⛅ Mid Clouds',
-    labelCloudLow:  '☁️ Low Clouds',
+    labelCloudHigh:  '🌤️ High Clouds (Cirrus)',
+    labelCloudMid:   '⛅ Mid Clouds',
+    labelCloudLow:   '☁️ Low Clouds',
+    labelVisibility: '👁️ Visibility',
     title:         'Sunset Forecast — Korea Red Sunset Predictor',
     h1:            'Korea Sunset Forecast',
     subtitle:      'Analyzing climate conditions (fine dust · clouds · humidity · wind)<br>to predict whether today will bring a beautiful red sunset.',
@@ -92,13 +95,14 @@ const TRANSLATIONS = {
     forecastTitle: '5-Day Sunset Forecast',
     algoTitle:     '🔬 Prediction Algorithm — Korean Climate Factors',
     algoItems: [
-      { title: 'Fine Dust (PM2.5) · 20%',   body: 'Fine particles scatter sunlight to create red hues. 10–35 μg/m³ is optimal; too much makes the sky hazy.' },
-      { title: 'High Clouds (Cirrus) · 22%', body: 'Cirrus clouds above 8km are the main driver of dramatic red sunsets. 30–70% coverage is ideal.' },
-      { title: 'Mid Clouds · 13%',           body: 'Altocumulus at 3–8km produce orange and purple hues. 10–40% is optimal.' },
+      { title: 'Aerosol (AOD+PM2.5) · 20%', body: 'Blends AOD (aerosol optical depth) 60% + PM2.5 40%. AOD directly measures light extinction through the full atmospheric column.' },
+      { title: 'High Clouds (Cirrus) · 20%', body: 'Cirrus above 8km are the main driver of dramatic red sunsets. 30–70% is ideal. Score is boosted under high-pressure (stable) conditions.' },
+      { title: 'Mid Clouds · 12%',           body: 'Altocumulus at 3–8km produce orange and purple hues. CAPE modifier increases score when moderate cloud development is expected.' },
       { title: 'Low Clouds · 5%',            body: 'Stratus below 3km can block the western horizon. Keep below 15% for clear views.' },
-      { title: 'Humidity · 18%',             body: '30–55% humidity is optimal. High humidity causes a foggy, washed-out appearance.' },
+      { title: 'Visibility · 8%',            body: 'Ground-level measure of atmospheric turbidity. 5,000–15,000m range indicates optimal aerosol scattering for rich sunset color.' },
+      { title: 'Humidity (Dew Point) · 16%', body: 'Uses dew point temperature instead of relative humidity to estimate column moisture. Dew point 5–15°C is optimal.' },
       { title: 'Wind Speed · 12%',           body: 'Light winds of 1–5 m/s help disperse pollutants without scattering clouds too quickly.' },
-      { title: 'Season Bonus · 10%',         body: 'Autumn (Sep–Oct) is the best season. Spring and winter are also solid; summer monsoon scores lowest.' },
+      { title: 'Season Bonus · 7%',          body: 'Autumn (Sep–Oct) is the best season. Spring and winter are also solid; summer monsoon scores lowest.' },
     ],
     footer: 'Weather & cloud layer data: Open-Meteo (ECMWF/GFS, free & open-source) &nbsp;·&nbsp; Air quality: Open-Meteo Air Quality API<br>Sunset times are calculated via astronomical formula (±few minutes)<br>Predictions are statistical estimates and may differ from actual conditions.',
     noData:  'No data',
@@ -125,9 +129,10 @@ const TRANSLATIONS = {
 
   zh: {
     // cloud layer labels
-    labelCloudHigh: '🌤️ 高层云 (卷云)',
-    labelCloudMid:  '⛅ 中层云',
-    labelCloudLow:  '☁️ 低层云',
+    labelCloudHigh:  '🌤️ 高层云 (卷云)',
+    labelCloudMid:   '⛅ 中层云',
+    labelCloudLow:   '☁️ 低层云',
+    labelVisibility: '👁️ 能见度',
     title:         '晚霞预报 — 韩国红色晚霞预测',
     h1:            '韩国晚霞预报',
     subtitle:      '通过分析气候条件（细颗粒物 · 云量 · 湿度 · 风速）<br>预测今天是否能看到美丽的红色晚霞。',
@@ -154,13 +159,14 @@ const TRANSLATIONS = {
     forecastTitle: '5天晚霞预报',
     algoTitle:     '🔬 预测算法 — 融合韩国气候特征',
     algoItems: [
-      { title: '细颗粒物 (PM2.5) · 20%', body: '大气中的微粒散射阳光，形成红色色调。10~35 μg/m³为最佳，过多会导致天空混浊。' },
-      { title: '高层云 (卷云) · 22%',    body: '8km以上的卷云是晚霞绚烂的核心，被夕阳点燃后呈现壮丽的红色。30~70%最为理想。' },
-      { title: '中层云 · 13%',           body: '3~8km的高积云负责橙色和紫色色调，10~40%为最佳。' },
-      { title: '低层云 · 5%',            body: '3km以下的层云会遮挡西方地平线，建议保持在15%以下。' },
-      { title: '湿度 · 18%',             body: '30~55%的湿度最为适宜，湿度过高会导致天空像雾一样模糊。' },
-      { title: '风速 · 12%',             body: '1~5 m/s的微风有助于分散污染物，同时不会过快驱散云层。' },
-      { title: '季节修正 · 10%',         body: '秋季（9~10月）是最佳季节。春冬也不错，夏季梅雨期得分最低。' },
+      { title: '气溶胶 (AOD+PM2.5) · 20%', body: '将AOD（气溶胶光学深度）60%与PM2.5 40%混合计算。AOD直接测量整个大气柱的光消散量，与晚霞红度直接相关。' },
+      { title: '高层云 (卷云) · 20%',       body: '8km以上的卷云是晚霞绚烂的核心，30~70%最理想。气压高（大气稳定）时获得额外加分。' },
+      { title: '中层云 · 12%',              body: '3~8km高积云负责橙色和紫色色调。CAPE（对流有效位能）适中时预示云层发展，获加分修正。' },
+      { title: '低层云 · 5%',               body: '3km以下层云会遮挡西方地平线，建议保持在15%以下。' },
+      { title: '能见度 · 8%',               body: '大气浊度的地面实测值。5,000~15,000m范围内气溶胶散射丰富，晚霞色彩更浓郁。' },
+      { title: '湿度（露点温度）· 16%',     body: '用露点温度代替相对湿度来估算大气柱水分。露点5~15°C为最佳。' },
+      { title: '风速 · 12%',                body: '1~5 m/s的微风有助于分散污染物，同时不会过快驱散云层。' },
+      { title: '季节修正 · 7%',             body: '秋季（9~10月）是最佳季节。春冬也不错，夏季梅雨期得分最低。' },
     ],
     footer: '天气·云层数据：Open-Meteo（基于ECMWF/GFS，免费开源）&nbsp;·&nbsp; 空气质量：Open-Meteo Air Quality API<br>日落时间通过天文公式计算（误差±数分钟）<br>预测基于统计分析，实际晚霞可能有所不同。',
     noData:  '无数据',
@@ -224,9 +230,10 @@ function applyLang() {
   bdLabels[1].innerHTML    = `${T.labelCloudHigh} <small>(권운·8km+)</small>`;
   bdLabels[2].innerHTML    = `${T.labelCloudMid}  <small>(3~8km)</small>`;
   bdLabels[3].innerHTML    = `${T.labelCloudLow}  <small>(3km-)</small>`;
-  bdLabels[4].textContent  = T.labelHumidity;
-  bdLabels[5].textContent  = T.labelWind;
-  bdLabels[6].textContent  = T.labelSeason;
+  bdLabels[4].textContent  = T.labelVisibility;
+  bdLabels[5].textContent  = T.labelHumidity;
+  bdLabels[6].textContent  = T.labelWind;
+  bdLabels[7].textContent  = T.labelSeason;
 
   document.querySelector('.tips-card .section-title').textContent = T.tipsTitle;
   document.querySelector('#forecast-section .section-title').textContent = T.forecastTitle;

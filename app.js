@@ -29,136 +29,194 @@ const WMO_DESCRIPTIONS = {
   95: '뇌우', 96: '우박 뇌우', 99: '강한 우박 뇌우',
 };
 
-function getWeatherDesc(code) {
-  return WMO_DESCRIPTIONS[code] ?? '알 수 없음';
-}
+function getWeatherDesc(code) { return WMO_DESCRIPTIONS[code] ?? '알 수 없음'; }
 
 function getWeatherEmoji(code) {
-  if (code === 0)       return '☀️';
-  if (code <= 2)        return '🌤️';
-  if (code === 3)       return '☁️';
-  if (code <= 48)       return '🌫️';
-  if (code <= 67)       return '🌧️';
-  if (code <= 77)       return '❄️';
-  if (code <= 82)       return '🌦️';
+  if (code === 0)  return '☀️';
+  if (code <= 2)   return '🌤️';
+  if (code === 3)  return '☁️';
+  if (code <= 48)  return '🌫️';
+  if (code <= 67)  return '🌧️';
+  if (code <= 77)  return '❄️';
+  if (code <= 82)  return '🌦️';
   return '⛈️';
 }
 
-// ===== 노을 품질 예측 알고리즘 =====
-// 구름을 상층/중층/하층으로 분리하여 정밀 예측
-// - 상층(권운, 8km+): 노을 때 불타는 붉은빛 반사의 주역
-// - 중층(고적운, 3~8km): 오렌지·보라 색조 담당
-// - 하층(층운, 3km-): 지평선 차단 주범
+// =============================================================
+// ===== 노을 품질 예측 알고리즘 (논문 기반 개선판) =====
+// 점수 구성 (합계 100):
+//   에어로졸(AOD+PM2.5) 20 | 상층구름 20 | 중층구름 12
+//   하층구름 5 | 가시거리 8 | 습도(이슬점) 16 | 풍속 12 | 계절 7
+// 기압·CAPE는 구름 점수에 ×보정계수로 적용
+// =============================================================
 
-/**
- * PM2.5 기반 에어로졸 점수 (0~20)
- */
-function scoreAerosol(pm25) {
+// ── 이슬점 계산 (Magnus 공식) ──────────────────────────────
+function calcDewpoint(rh, temp) {
+  const a = 17.625, b = 243.04;
+  const ln = Math.log(rh / 100);
+  return (b * (ln + (a * temp) / (b + temp))) /
+         (a  - (ln + (a * temp) / (b + temp)));
+}
+
+// ── AOD (에어로졸 광학 깊이) 점수 (0~20) ──────────────────
+// AOD는 대기 전체 컬럼의 빛 소산량. PM2.5보다 노을 색상과
+// 직접 연관 (Rayleigh + Mie 산란 논문 근거)
+function scoreAOD(aod) {
+  if (aod === null || aod === undefined) return null;
+  if (aod < 0.05)  return 10;  // 너무 깨끗 → 색 밋밋
+  if (aod < 0.15)  return 16;  // 양호
+  if (aod < 0.40)  return 20;  // 최적: 풍부한 붉은색
+  if (aod < 0.70)  return 16;  // 탁하지만 색채 있음
+  if (aod < 1.0)   return 10;  // 매우 탁함
+  return 5;                     // 극심한 탁도
+}
+
+// ── PM2.5 점수 (0~20, AOD 없을 때 단독 사용) ─────────────
+function scorePM25(pm25) {
   if (pm25 === null || pm25 === undefined) return 10;
-  if (pm25 < 5)  return 8;   // 깨끗해도 레일리 산란으로 기본 노을 있음
-  if (pm25 < 15) return 18;  // 최적
-  if (pm25 < 35) return 16;  // 양호
-  if (pm25 < 55) return 10;  // 보통 (약간 탁함)
-  if (pm25 < 75) return 5;   // 나쁨
-  return 2;                   // 매우 나쁨
+  if (pm25 < 5)   return 10;
+  if (pm25 < 15)  return 18;
+  if (pm25 < 35)  return 16;
+  if (pm25 < 55)  return 10;
+  if (pm25 < 75)  return 5;
+  return 2;
 }
 
-/**
- * 상층 구름 점수 (0~22)
- * 권운·고권운: 노을 빛을 받아 붉게 불타는 구름의 주역
- */
+// ── 에어로졸 통합 점수 (AOD 60% + PM2.5 40% 블렌드) ──────
+function scoreAerosol(aod, pm25) {
+  const aodScore = scoreAOD(aod);
+  const pm25Score = scorePM25(pm25);
+  if (aodScore === null) return pm25Score;
+  return Math.round(0.6 * aodScore + 0.4 * pm25Score);
+}
+
+// ── 상층 구름 점수 (0~20) ─────────────────────────────────
+// 권운·고권운(8km+): 노을 빛에 불타는 붉은빛의 핵심
 function scoreCloudHigh(pct) {
-  if (pct < 10)  return 11;  // 거의 없음: 레일리 산란만
-  if (pct < 30)  return 17;  // 약간 있음
-  if (pct < 70)  return 22;  // 최적: 화려한 노을
-  if (pct < 90)  return 15;  // 많음: 여전히 괜찮음
-  return 8;                   // 완전 덮임
+  if (pct < 10)   return 10;
+  if (pct < 30)   return 15;
+  if (pct < 70)   return 20;  // 최적
+  if (pct < 90)   return 14;
+  return 8;
 }
 
-/**
- * 중층 구름 점수 (0~13)
- * 고적운·고층운: 오렌지·자주 색조 담당
- */
+// ── 중층 구름 점수 (0~12) ─────────────────────────────────
+// 고적운·고층운(3~8km): 오렌지·자주 색조 담당
 function scoreCloudMid(pct) {
-  if (pct < 10)  return 9;   // 거의 없음
-  if (pct < 40)  return 13;  // 최적
-  if (pct < 70)  return 8;   // 많아짐
-  return 3;                   // 하늘 가림
+  if (pct < 10)   return 8;
+  if (pct < 40)   return 12;  // 최적
+  if (pct < 70)   return 7;
+  return 2;
 }
 
-/**
- * 하층 구름 점수 (0~5)
- * 층운·적운: 많으면 지평선 차단 → 노을 차단
- */
+// ── 하층 구름 점수 (0~5) ──────────────────────────────────
+// 층운·적운(3km-): 지평선 차단 → 감점
 function scoreCloudLow(pct) {
-  if (pct < 15)  return 5;   // 최적: 지평선 트임
-  if (pct < 35)  return 3;   // 약간
-  if (pct < 60)  return 1;   // 지평선 차단 위험
-  return 0;                   // 차단
+  if (pct < 15)   return 5;
+  if (pct < 35)   return 3;
+  if (pct < 60)   return 1;
+  return 0;
 }
 
-/**
- * 습도 점수 (0~18)
- */
-function scoreHumidity(humidity) {
-  if (humidity < 30) return 10;
-  if (humidity < 55) return 18;
-  if (humidity < 70) return 14;
-  if (humidity < 85) return 7;
-  return 3;
+// ── 기압 기반 대기 안정도 보정계수 ────────────────────────
+// 고기압 → 안정 → 구름 지속 / 저기압 → 불안정 → 구름 빠르게 변화
+function getPressureModifier(pressure) {
+  if (!pressure) return 1.0;
+  if (pressure > 1020)  return 1.10;
+  if (pressure > 1015)  return 1.05;
+  if (pressure > 1010)  return 1.00;
+  if (pressure > 1005)  return 0.95;
+  return 0.90;
 }
 
-/**
- * 풍속 점수 (0~12)
- */
+// ── CAPE 기반 대류 보정계수 ───────────────────────────────
+// 적당한 CAPE → 중층 구름 발생 예상 (노을 도움)
+// 과도한 CAPE → 뇌우 가능성 (어두운 적란운)
+function getCAPEModifier(cape) {
+  if (!cape || cape < 100)   return 1.00;
+  if (cape < 500)             return 1.05;
+  if (cape < 1500)            return 1.12;  // 최적 구름 발달
+  if (cape < 3000)            return 1.00;
+  return 0.82;                               // 폭풍 위험
+}
+
+// ── 가시거리 점수 (0~8) ───────────────────────────────────
+// 대기 탁도의 지상 실측치. AOD와 함께 이중 검증 역할
+// 5,000~15,000m: 약간 뿌연 대기 → 산란광 풍부
+function scoreVisibility(visMeters) {
+  if (!visMeters) return 4;
+  if (visMeters > 30000)  return 4;   // 너무 맑음 → 색 밋밋
+  if (visMeters > 15000)  return 6;   // 양호
+  if (visMeters > 5000)   return 8;   // 최적: 적당한 에어로졸
+  if (visMeters > 2000)   return 5;   // 매우 탁함
+  return 1;                            // 안개/극심한 탁도
+}
+
+// ── 습도 점수 (0~16, 이슬점 기반) ────────────────────────
+// 단순 RH 대신 이슬점(절대 수분량)으로 컬럼 수분 근사
+// 이슬점 5~15°C: 적당한 수분 → 에어로졸 흡습 성장 → 색 향상
+function scoreHumidity(rh, temp) {
+  const dp = calcDewpoint(rh, temp);
+  if (dp < -5)   return 10;  // 매우 건조
+  if (dp < 5)    return 13;  // 건조
+  if (dp < 15)   return 16;  // 최적
+  if (dp < 20)   return 10;  // 습함
+  return 5;                   // 매우 습함 (안개 위험)
+}
+
+// ── 풍속 점수 (0~12) ──────────────────────────────────────
 function scoreWind(windSpeed) {
-  if (windSpeed < 1)  return 6;
-  if (windSpeed < 5)  return 12;
-  if (windSpeed < 10) return 9;
-  if (windSpeed < 15) return 6;
+  if (windSpeed < 1)   return 6;
+  if (windSpeed < 5)   return 12;  // 최적
+  if (windSpeed < 10)  return 9;
+  if (windSpeed < 15)  return 6;
   return 3;
 }
 
-/**
- * 계절 보정 점수 (0~10)
- */
+// ── 계절 보정 점수 (0~7) ──────────────────────────────────
 function scoreSeason(month) {
-  if (month === 9 || month === 10) return 10; // 가을: 최고
-  if (month === 5 || month === 11) return 8;  // 초여름 끝·늦가을
-  if (month === 3 || month === 4)  return 7;  // 봄 (황사 있지만 노을 아름다움)
-  if (month === 12 || month === 1) return 7;  // 겨울 (건조)
-  if (month === 2)                 return 6;  // 겨울 끝
-  if (month === 6)                 return 5;  // 장마 전
-  if (month === 7 || month === 8)  return 4;  // 여름 (장마)
-  return 5;
+  if (month === 9 || month === 10)  return 7;   // 가을: 최고
+  if (month === 5 || month === 11)  return 6;
+  if (month === 3 || month === 4)   return 5;
+  if (month === 12 || month === 1)  return 5;
+  if (month === 2)                  return 4;
+  if (month === 6)                  return 3;
+  if (month === 7 || month === 8)   return 2;   // 여름 장마: 최저
+  return 3;
 }
 
-/**
- * 종합 노을 품질 점수 계산 (0~100)
- * 최대 합계: 20 + 22 + 13 + 5 + 18 + 12 + 10 = 100
- */
+// ── 종합 노을 품질 점수 (0~100) ───────────────────────────
+// 기압·CAPE 보정 포함 시 최대 ~103 → Math.min(100, ...) 처리
 function calculateSunsetScore(weather) {
-  const { pm25, cloudHigh, cloudMid, cloudLow, humidity, windSpeed, month } = weather;
+  const { aod, pm25, cloudHigh, cloudMid, cloudLow,
+          visibility, humidity, temp, windSpeed, month,
+          pressure, cape } = weather;
 
-  const s_aerosol  = scoreAerosol(pm25);
-  const s_high     = scoreCloudHigh(cloudHigh ?? 0);
-  const s_mid      = scoreCloudMid(cloudMid ?? 0);
-  const s_low      = scoreCloudLow(cloudLow ?? 0);
-  const s_humidity = scoreHumidity(humidity);
-  const s_wind     = scoreWind(windSpeed);
-  const s_season   = scoreSeason(month);
+  const s_aerosol    = scoreAerosol(aod, pm25);
+  const s_high       = Math.round(scoreCloudHigh(cloudHigh ?? 0) * getPressureModifier(pressure));
+  const s_mid        = Math.round(scoreCloudMid(cloudMid   ?? 0) * getCAPEModifier(cape));
+  const s_low        = scoreCloudLow(cloudLow ?? 0);
+  const s_visibility = scoreVisibility(visibility);
+  const s_humidity   = scoreHumidity(humidity ?? 60, temp ?? 15);
+  const s_wind       = scoreWind(windSpeed ?? 3);
+  const s_season     = scoreSeason(month);
 
-  const total = s_aerosol + s_high + s_mid + s_low + s_humidity + s_wind + s_season;
+  const total = s_aerosol + s_high + s_mid + s_low +
+                s_visibility + s_humidity + s_wind + s_season;
 
   return {
     total: Math.min(100, Math.round(total)),
-    breakdown: { s_aerosol, s_high, s_mid, s_low, s_humidity, s_wind, s_season },
+    breakdown: { s_aerosol, s_high, s_mid, s_low, s_visibility, s_humidity, s_wind, s_season },
+    meta: {
+      aodUsed:  aod !== null && aod !== undefined,
+      pressure: pressure?.toFixed(0),
+      cape:     cape?.toFixed(0),
+      dewpoint: (humidity && temp) ? calcDewpoint(humidity, temp).toFixed(1) : null,
+    },
   };
 }
 
-/**
- * 점수에 따른 등급 및 색상
- */
+// ── 점수 등급 ─────────────────────────────────────────────
 function getGrade(score) {
   const grades = t('grades');
   if (score >= 85) return { ...grades[0], color: "#FF4500", emoji: "🌅" };
@@ -197,40 +255,44 @@ function calcGoldenHour(lat, lon, date) {
   return `${sh.toString().padStart(2, '0')}:${sm.toString().padStart(2, '0')} ~ ${sunset}`;
 }
 
-// ===== 촬영 팁 생성 =====
+// ===== 촬영 팁 =====
 function getPhotoTips(weather, score) {
   const tips = [];
-  const { pm25, cloudHigh, cloudMid, cloudLow, humidity } = weather;
+  const { pm25, cloudHigh, cloudLow, humidity, temp } = weather;
   const T = t('tips');
 
-  if (score.total >= 70)                    tips.push(T.tripod);
-  if (cloudHigh >= 20 && cloudHigh <= 70)   tips.push(T.clouds);
-  if (pm25 >= 10 && pm25 <= 35)             tips.push(T.aerosol);
-  if (pm25 > 55)                            tips.push(T.haze);
-  if (humidity > 70)                        tips.push(T.humidity);
+  if (score.total >= 70)                     tips.push(T.tripod);
+  if ((cloudHigh ?? 0) >= 20 && (cloudHigh ?? 0) <= 70) tips.push(T.clouds);
+  if (pm25 >= 10 && pm25 <= 35)              tips.push(T.aerosol);
+  if (pm25 > 55)                             tips.push(T.haze);
+  if (humidity && temp && calcDewpoint(humidity, temp) > 18) tips.push(T.humidity);
   if ((cloudLow ?? 0) > 50)                 tips.push(T.lowCloud);
   if (score.total >= 55) {
     tips.push(T.exposure);
     tips.push(T.wb);
   }
-  if (tips.length === 0)                    tips.push(T.poor);
+  if (tips.length === 0) tips.push(T.poor);
   return tips;
 }
 
-// ===== Open-Meteo API 호출 (무료, API 키 불필요) =====
+// ===== Open-Meteo API (무료, 키 불필요) =====
 async function fetchOpenMeteo(lat, lon) {
   const weatherUrl =
     `https://api.open-meteo.com/v1/forecast` +
     `?latitude=${lat}&longitude=${lon}` +
-    `&current=temperature_2m,relativehumidity_2m,windspeed_10m,cloudcover,cloudcover_low,cloudcover_mid,cloudcover_high,weathercode` +
-    `&hourly=cloudcover_low,cloudcover_mid,cloudcover_high,cloudcover,relativehumidity_2m,windspeed_10m,weathercode` +
+    `&current=temperature_2m,relativehumidity_2m,windspeed_10m,` +
+    `cloudcover,cloudcover_low,cloudcover_mid,cloudcover_high,` +
+    `weathercode,pressure_msl,visibility` +
+    `&hourly=cloudcover_low,cloudcover_mid,cloudcover_high,cloudcover,` +
+    `relativehumidity_2m,windspeed_10m,weathercode,` +
+    `temperature_2m,pressure_msl,visibility,cape` +
     `&forecast_days=6&timezone=Asia%2FSeoul`;
 
   const aqUrl =
     `https://air-quality-api.open-meteo.com/v1/air-quality` +
     `?latitude=${lat}&longitude=${lon}` +
-    `&current=pm2_5,pm10,dust` +
-    `&hourly=pm2_5` +
+    `&current=pm2_5,pm10,dust,aerosol_optical_depth` +
+    `&hourly=pm2_5,aerosol_optical_depth` +
     `&forecast_days=6&timezone=Asia%2FSeoul`;
 
   let weatherRes, aqRes;
@@ -248,16 +310,19 @@ async function fetchOpenMeteo(lat, lon) {
   return { weather, aq };
 }
 
-/**
- * Open-Meteo 시간별 예보에서 날짜별 일몰 시간대(17~19시) 데이터 추출
- */
+// ===== 시간별 예보에서 일몰 시간대(15~20시) 데이터 추출 =====
 function extractDailyForecast(weatherData, aqData) {
   const times = weatherData.hourly.time;
 
-  // AQ 시간별 PM2.5 맵 구성
-  const pm25Map = {};
+  // AQ 시간별 맵 구성
+  const aqMap = {};
   if (aqData?.hourly?.time) {
-    aqData.hourly.time.forEach((t, i) => { pm25Map[t] = aqData.hourly.pm2_5[i]; });
+    aqData.hourly.time.forEach((t, i) => {
+      aqMap[t] = {
+        pm25: aqData.hourly.pm2_5?.[i] ?? null,
+        aod:  aqData.hourly.aerosol_optical_depth?.[i] ?? null,
+      };
+    });
   }
 
   const dailyMap = {};
@@ -270,6 +335,7 @@ function extractDailyForecast(weatherData, aqData) {
     if (hour >= 15 && hour <= 20) {
       const prefer = hour === 18 || hour === 17;
       if (!dailyMap[dateStr] || prefer) {
+        const aq = aqMap[timeStr] ?? {};
         dailyMap[dateStr] = {
           dateStr,
           date,
@@ -278,10 +344,15 @@ function extractDailyForecast(weatherData, aqData) {
           cloudLow:    weatherData.hourly.cloudcover_low[i],
           clouds:      weatherData.hourly.cloudcover[i],
           humidity:    weatherData.hourly.relativehumidity_2m[i],
+          temp:        weatherData.hourly.temperature_2m[i],
           windSpeed:   weatherData.hourly.windspeed_10m[i],
+          pressure:    weatherData.hourly.pressure_msl?.[i] ?? null,
+          cape:        weatherData.hourly.cape?.[i] ?? null,
+          visibility:  weatherData.hourly.visibility?.[i] ?? null,
           month:       date.getMonth() + 1,
           weatherCode: weatherData.hourly.weathercode[i],
-          pm25:        pm25Map[timeStr] ?? null,
+          pm25:        aq.pm25 ?? null,
+          aod:         aq.aod  ?? null,
         };
       }
     }
@@ -301,26 +372,35 @@ function renderCitySelector() {
 function renderCurrentConditions(weather, aq, lat, lon) {
   const cur = weather.current;
 
-  const pm25      = aq?.current?.pm2_5 ?? null;
-  const pm10      = aq?.current?.pm10  ?? null;
-  const cloudHigh = cur.cloudcover_high;
-  const cloudMid  = cur.cloudcover_mid;
-  const cloudLow  = cur.cloudcover_low;
-  const clouds    = cur.cloudcover;
-  const humidity  = cur.relativehumidity_2m;
-  const windSpeed = cur.windspeed_10m;
-  const temp      = cur.temperature_2m;
-  const code      = cur.weathercode;
-  const month     = new Date().getMonth() + 1;
+  const pm25       = aq?.current?.pm2_5                  ?? null;
+  const pm10       = aq?.current?.pm10                   ?? null;
+  const aod        = aq?.current?.aerosol_optical_depth  ?? null;
+  const cloudHigh  = cur.cloudcover_high;
+  const cloudMid   = cur.cloudcover_mid;
+  const cloudLow   = cur.cloudcover_low;
+  const clouds     = cur.cloudcover;
+  const humidity   = cur.relativehumidity_2m;
+  const temp       = cur.temperature_2m;
+  const windSpeed  = cur.windspeed_10m;
+  const pressure   = cur.pressure_msl   ?? null;
+  const visibility = cur.visibility     ?? null;
+  const code       = cur.weathercode;
+  const month      = new Date().getMonth() + 1;
 
-  const scoreResult = calculateSunsetScore({ pm25, cloudHigh, cloudMid, cloudLow, humidity, windSpeed, month });
+  // CAPE는 current에 없으므로 hourly 첫 번째 값 참고
+  const cape = weather.hourly?.cape?.[0] ?? null;
+
+  const scoreResult = calculateSunsetScore({
+    aod, pm25, cloudHigh, cloudMid, cloudLow,
+    visibility, humidity, temp, windSpeed, month, pressure, cape,
+  });
   const grade = getGrade(scoreResult.total);
-  const tips  = getPhotoTips({ pm25, cloudHigh, cloudMid, cloudLow, humidity }, scoreResult);
+  const tips  = getPhotoTips({ pm25, cloudHigh, cloudLow, humidity, temp }, scoreResult);
   const today = new Date();
   const sunsetTime = calcSunsetTime(lat, lon, today);
   const goldenHour = calcGoldenHour(lat, lon, today);
 
-  // 점수 링 애니메이션
+  // 점수 링
   const ring       = document.getElementById('score-ring');
   const scoreNum   = document.getElementById('score-number');
   const scoreLabel = document.getElementById('score-label');
@@ -336,38 +416,44 @@ function renderCurrentConditions(weather, aq, lat, lon) {
   gradeEl.textContent          = `${grade.emoji} ${grade.grade}`;
   gradeEl.style.color          = grade.color;
 
-  // 일몰 시각
-  document.getElementById('sunset-time').textContent  = sunsetTime  || '--:--';
-  document.getElementById('golden-hour').textContent  = goldenHour  || '--:-- ~ --:--';
+  document.getElementById('sunset-time').textContent = sunsetTime || '--:--';
+  document.getElementById('golden-hour').textContent = goldenHour || '--:-- ~ --:--';
 
-  // 날씨 상세
-  document.getElementById('stat-pm25').textContent        = pm25 !== null ? `${pm25.toFixed(1)} μg/m³` : t('noData');
-  document.getElementById('stat-pm10').textContent        = pm10 !== null ? `${pm10.toFixed(1)} μg/m³` : t('noData');
-  document.getElementById('stat-clouds').textContent      = `${clouds}%`;
-  document.getElementById('stat-humidity').textContent    = `${humidity}%`;
-  document.getElementById('stat-wind').textContent        = `${windSpeed.toFixed(1)} m/s`;
-  document.getElementById('stat-temp').textContent        = `${temp.toFixed(1)}°C`;
+  // 통계
+  document.getElementById('stat-pm25').textContent     = pm25 !== null ? `${pm25.toFixed(1)} μg/m³` : t('noData');
+  document.getElementById('stat-pm10').textContent     = pm10 !== null ? `${pm10.toFixed(1)} μg/m³` : t('noData');
+  document.getElementById('stat-clouds').textContent   = `${clouds}%`;
+  document.getElementById('stat-humidity').textContent = `${humidity}%`;
+  document.getElementById('stat-wind').textContent     = `${windSpeed.toFixed(1)} m/s`;
+  document.getElementById('stat-temp').textContent     = `${temp.toFixed(1)}°C`;
 
-  // 점수 세부 분석
-  const bd = scoreResult.breakdown;
-  renderBreakdownBar('bar-aerosol',    bd.s_aerosol,  20, grade.color);
-  renderBreakdownBar('bar-cloud-high', bd.s_high,     22, grade.color);
-  renderBreakdownBar('bar-cloud-mid',  bd.s_mid,      13, grade.color);
-  renderBreakdownBar('bar-cloud-low',  bd.s_low,       5, grade.color);
-  renderBreakdownBar('bar-humidity',   bd.s_humidity,  18, grade.color);
-  renderBreakdownBar('bar-wind',       bd.s_wind,      12, grade.color);
-  renderBreakdownBar('bar-season',     bd.s_season,    10, grade.color);
-
-  // 구름 레이어 상세 (breakdown 섹션 서브텍스트)
-  const cloudDetail = document.getElementById('cloud-detail');
-  if (cloudDetail) {
-    cloudDetail.textContent = `상층 ${cloudHigh}% · 중층 ${cloudMid}% · 하층 ${cloudLow}%`;
+  // 메타 정보 (이슬점·AOD·기압 표시)
+  const metaEl = document.getElementById('score-meta');
+  if (metaEl) {
+    const parts = [];
+    const m = scoreResult.meta;
+    if (m.dewpoint !== null)  parts.push(`이슬점 ${m.dewpoint}°C`);
+    if (m.aodUsed)            parts.push(`AOD ${aod.toFixed(2)}`);
+    if (m.pressure !== null)  parts.push(`기압 ${m.pressure} hPa`);
+    if (m.cape !== null)      parts.push(`CAPE ${Number(m.cape).toFixed(0)} J/kg`);
+    metaEl.textContent = parts.join('  ·  ');
   }
+
+  // 항목별 분석 바
+  const bd = scoreResult.breakdown;
+  renderBreakdownBar('bar-aerosol',    bd.s_aerosol,    20, grade.color);
+  renderBreakdownBar('bar-cloud-high', bd.s_high,       20, grade.color);
+  renderBreakdownBar('bar-cloud-mid',  bd.s_mid,        12, grade.color);
+  renderBreakdownBar('bar-cloud-low',  bd.s_low,         5, grade.color);
+  renderBreakdownBar('bar-visibility', bd.s_visibility,  8, grade.color);
+  renderBreakdownBar('bar-humidity',   bd.s_humidity,   16, grade.color);
+  renderBreakdownBar('bar-wind',       bd.s_wind,       12, grade.color);
+  renderBreakdownBar('bar-season',     bd.s_season,      7, grade.color);
 
   // 촬영 팁
   document.getElementById('photo-tips').innerHTML = tips.map(tip => `<li>${tip}</li>`).join('');
 
-  // 현재 날씨 설명
+  // 날씨 설명
   document.getElementById('weather-desc').textContent =
     `${state.selectedCity.name} · ${getWeatherDesc(code)} · ${temp.toFixed(1)}°C`;
 
@@ -456,14 +542,14 @@ async function loadData() {
 
 function setLoading(val) {
   state.loading = val;
-  document.getElementById('loading').style.display    = val ? 'flex' : 'none';
-  document.getElementById('search-btn').disabled      = val;
+  document.getElementById('loading').style.display = val ? 'flex' : 'none';
+  document.getElementById('search-btn').disabled   = val;
 }
 
 function showError(msg) {
   const el = document.getElementById('error-msg');
-  el.textContent    = msg;
-  el.style.display  = 'block';
+  el.textContent   = msg;
+  el.style.display = 'block';
 }
 
 function clearError() {

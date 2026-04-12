@@ -65,6 +65,7 @@
           </div>
           <div id="score-grade">--</div>
           <div id="score-label">예측 결과를 불러오는 중</div>
+          <div id="score-meta" class="score-meta"></div>
         </div>
 
         <!-- 일몰 시각 -->
@@ -128,12 +129,12 @@
         <div class="breakdown-row">
           <span class="breakdown-label">🌤️ 상층구름 <small>(권운·8km+)</small></span>
           <div class="bar-track"><div id="bar-cloud-high" class="bar-fill"></div></div>
-          <span class="breakdown-max" id="pct-cloud-high">0/22</span>
+          <span class="breakdown-max" id="pct-cloud-high">0/20</span>
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">⛅ 중층구름 <small>(3~8km)</small></span>
           <div class="bar-track"><div id="bar-cloud-mid" class="bar-fill"></div></div>
-          <span class="breakdown-max" id="pct-cloud-mid">0/13</span>
+          <span class="breakdown-max" id="pct-cloud-mid">0/12</span>
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">☁️ 하층구름 <small>(3km-)</small></span>
@@ -141,9 +142,14 @@
           <span class="breakdown-max" id="pct-cloud-low">0/5</span>
         </div>
         <div class="breakdown-row">
+          <span class="breakdown-label">👁️ 가시거리</span>
+          <div class="bar-track"><div id="bar-visibility" class="bar-fill"></div></div>
+          <span class="breakdown-max" id="pct-visibility">0/8</span>
+        </div>
+        <div class="breakdown-row">
           <span class="breakdown-label">💧 습도</span>
           <div class="bar-track"><div id="bar-humidity" class="bar-fill"></div></div>
-          <span class="breakdown-max" id="pct-humidity">0/18</span>
+          <span class="breakdown-max" id="pct-humidity">0/16</span>
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">🌬️ 풍속</span>
@@ -153,7 +159,7 @@
         <div class="breakdown-row">
           <span class="breakdown-label">📅 계절</span>
           <div class="bar-track"><div id="bar-season" class="bar-fill"></div></div>
-          <span class="breakdown-max" id="pct-season">0/10</span>
+          <span class="breakdown-max" id="pct-season">0/7</span>
         </div>
       </div>
 
@@ -175,38 +181,36 @@
       <h3>🔬 예측 알고리즘 — 한국 기후 특성 반영</h3>
       <div class="algo-grid">
         <div class="algo-item">
-          <strong>미세먼지 (PM2.5) · 20%</strong>
-          대기 중 미세입자가 태양광을 산란시켜 붉은색을 만들어냅니다.
-          10~35 μg/m³이 최적, 너무 많으면 탁해집니다.
+          <strong>에어로졸 (AOD+PM2.5) · 20%</strong>
+          AOD와 PM2.5를 혼합합니다. AOD는 대기 전체 빛 소산량으로 노을 붉기와 직접 연관됩니다.
         </div>
         <div class="algo-item">
-          <strong>상층구름 (권운) · 22%</strong>
-          8km 이상의 권운은 노을 빛을 받아 불타듯 붉게 물드는 핵심 요소입니다.
-          30~70%가 가장 화려한 노을을 만들어냅니다.
+          <strong>상층구름 (권운) · 20%</strong>
+          8km 이상의 권운이 핵심입니다. 기압 보정 포함.
         </div>
         <div class="algo-item">
-          <strong>중층구름 · 13%</strong>
-          3~8km 고도의 고적운·고층운은 오렌지·자주 색조를 담당합니다.
-          10~40%가 최적입니다.
+          <strong>중층구름 · 12%</strong>
+          오렌지·자주 색조 담당. CAPE 보정 포함.
         </div>
         <div class="algo-item">
           <strong>하층구름 · 5%</strong>
-          3km 이하의 층운·적운은 많으면 서쪽 지평선을 차단해 노을을 가립니다.
-          15% 이하가 이상적입니다.
+          지평선 차단 주범. 15% 이하가 이상적입니다.
         </div>
         <div class="algo-item">
-          <strong>습도 · 18%</strong>
-          30~55%의 적당한 습도가 최적입니다.
-          습도가 높으면 안개처럼 흐릿해집니다.
+          <strong>가시거리 · 8%</strong>
+          대기 탁도의 지상 실측값. 5,000~15,000m가 최적입니다.
+        </div>
+        <div class="algo-item">
+          <strong>습도 (이슬점) · 16%</strong>
+          이슬점 온도로 컬럼 수분을 추정합니다. 이슬점 5~15°C가 최적입니다.
         </div>
         <div class="algo-item">
           <strong>풍속 · 12%</strong>
           1~5 m/s의 약한 바람이 오염물질을 적당히 분산시킵니다.
         </div>
         <div class="algo-item">
-          <strong>계절 보정 · 10%</strong>
-          가을(9~10월)이 최고입니다. 봄·겨울도 준수하며,
-          여름 장마철에 점수가 낮아집니다.
+          <strong>계절 보정 · 7%</strong>
+          가을(9~10월)이 최고입니다. 봄·겨울도 준수하며, 여름 장마철에 점수가 낮아집니다.
         </div>
       </div>
     </div>
